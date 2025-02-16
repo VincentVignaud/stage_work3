@@ -26,7 +26,7 @@ class Order
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
+    private ?Users $user = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 0)]
     private ?string $totalPrice = null;
@@ -79,12 +79,12 @@ class Order
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getUser(): ?Users
     {
         return $this->user;
     }
 
-    public function setUser(?User $user): static
+    public function setUser(?Users $user): static
     {
         $this->user = $user;
 

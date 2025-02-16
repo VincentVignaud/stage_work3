@@ -2,17 +2,19 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Security\UserAuthenticator;
 use App\Repository\UserRepository;
 use App\DTO\RegisterDTO;
+use App\Entity\Users;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Security;
@@ -28,8 +30,14 @@ final class AuthController extends AbstractController
         ]);
     }
 
+    private EntityManagerInterface $entityManager;
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
     #[Route('/auth/register', name: 'auth_register', methods: ['POST'])]
-    public function register(Request $request, UserPasswordEncoderInterface $encoder, ValidatorInterface $validator): JsonResponse
+    public function register(Request $request, PasswordHasherInterface $encoder, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -37,17 +45,31 @@ final class AuthController extends AbstractController
             return new JsonResponse(['message' => 'Email et mot de passe sont nécessaires.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = new User();
+        $user = new Users();
         $user->setEmail($data['email']);
-        $user->setPassword($encoder->encodePassword($user, $data['password']));
+        $hashedPassword = $encoder->hash($data['password']);
+        $user->setPassword($hashedPassword);
         $user->setRoles(['ROLE_USER']);
-        
+
         $errors = $validator->validate($user);
+        $errorDetails = [];
         if (count($errors) > 0) {
-            return new JsonResponse(['message' => 'Entrée incorrect.'], Response::HTTP_BAD_REQUEST);
+            foreach ($errors as $error) {
+                $path = $error->getPropertypath();
+                $message = $error->getMessage();
+
+                if (!isset($errorDetails[$path])) {
+                    $errorDetails[$path] = [];
+                }
+                $errorDetails[$path][] = $message;
+            }
+            return $this->json([
+                'message' => 'Echec de validation',
+                'errors' => $errorDetails
+            ], 400);
         }
 
-        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager = $this->entityManager;
         $entityManager->persist($user);
         $entityManager->flush();
 
@@ -55,16 +77,16 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/api/login', name: 'auth_login', methods: ['POST'])]
-    public function login(Request $request, AuthentificationManagerInterface $authenticationManager): JsonResponse
+    public function login(Request $request, AuthenticationManagerInterface $authenticationManager): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        
+        $data = $request->getPayload();
+
         if (!isset($data['email'], $data['password'])) {
             return new JsonResponse(['message' => 'Email et mot de passe requis.'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $user = $this->getDoctrine()->getRepository(User::class)->findOneByEmail($data['email']);
+            $user = $this->getDoctrine()->getRepository(Users::class)->findOneByEmail($data['email']);
             if (!$user) {
                 return new JsonResponse(['message' => 'Utilisateur introuvable.'], Response::HTTP_UNAUTHORIZED);
             }
@@ -78,4 +100,3 @@ final class AuthController extends AbstractController
         }
     }
 }
-

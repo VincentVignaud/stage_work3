@@ -17,6 +17,9 @@ class Category
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    /**
+     * @Assert\NotBlank(message="Il doit y avoir un nom ici")
+     */
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

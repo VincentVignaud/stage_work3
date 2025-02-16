@@ -15,12 +15,18 @@ class Product
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    /**
+     * @Assert\NotBlank(message="Il doit y avoir un nom ici")
+     */
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 0)]
+    /**
+     * @Assert\NotBlank(message="Il doit y avoir un prénom ici")
+     */
     private ?string $price = null;
 
     #[ORM\Column(nullable: true)]
@@ -34,6 +40,9 @@ class Product
 
     #[ORM\ManyToOne(inversedBy: 'parent')]
     #[ORM\JoinColumn(nullable: false)]
+    /**
+     * @Assert\NotBlank(message="Il doit y avoir un prénom ici")
+     */
     private ?Category $category = null;
 
     public function getId(): ?int
