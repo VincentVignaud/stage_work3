@@ -18,6 +18,7 @@ use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Http\Authentication\AuthenticatorManagerInterface;
 
 final class AuthController extends AbstractController
 {
@@ -77,7 +78,7 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/api/login', name: 'auth_login', methods: ['POST'])]
-    public function login(Request $request, AuthenticationManagerInterface $authenticationManager): JsonResponse
+    public function login(Request $request, AuthenticatorManagerInterface $authenticationManager): JsonResponse
     {
         $data = $request->getPayload();
 
@@ -86,7 +87,7 @@ final class AuthController extends AbstractController
         }
 
         try {
-            $user = $this->getDoctrine()->getRepository(Users::class)->findOneByEmail($data['email']);
+            $user = $this->entityManager->getRepository(Users::class)->findOneByEmail($data['email']);
             if (!$user) {
                 return new JsonResponse(['message' => 'Utilisateur introuvable.'], Response::HTTP_UNAUTHORIZED);
             }

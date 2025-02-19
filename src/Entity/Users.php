@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UsersRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -20,10 +21,8 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    /**
-     * @Assert\NotBlank(message="Il doit y avoir email")
-     * @Asser\Email(message="L'email doit être dans un format valide")
-     */
+    #[Assert\NotBlank(message: "Il doit y avoir un email")]
+    #[Assert\Email(message: "L'email doit être dans un format valide")]
     private ?string $email = null;
 
     /**
@@ -36,26 +35,19 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    /**
-     * @Assert\NotBlank(message="Il doit y avoir email")
-     * @Asser\Email(message="L'email doit être dans un format valide")
-     * @Assert\PasswordStrength(['message'="Votre mot de passe n'est pas assez sûr"
-     */
+    #[Assert\NotBlank(message: "Il doit y avoir un mot de passe")]
+    #[Assert\PasswordStrength(message: "votre mot de passe n'est pas sûr")]
     private ?string $password = null;
 
     #[ORM\Column]
     private bool $isVerified = false;
 
     #[ORM\Column(length: 255, nullable: true)]
-    /**
-     * @Assert\NotBlank(message="Il doit y avoir un prénom ici")
-     */
+    #[Assert\NotBlank(message: "Il doit y avoir un prénom")]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    /**
-     * @Assert\NotBlank(message="Il doit y avoir un nom ici")
-     */
+    #[Assert\NotBlank(message: "Il doit y avoir un nom de famille")]
     private ?string $lastName = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

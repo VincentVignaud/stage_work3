@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 class Category
@@ -17,9 +18,7 @@ class Category
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    /**
-     * @Assert\NotBlank(message="Il doit y avoir un nom ici")
-     */
+    #[Assert\NotBlank(message: "La catégorie doit avoir un nom")]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -93,7 +92,6 @@ class Category
     public function removeParent(Product $parent): static
     {
         if ($this->parent->removeElement($parent)) {
-            // set the owning side to null (unless already changed)
             if ($parent->getCategory() === $this) {
                 $parent->setCategory(null);
             }
